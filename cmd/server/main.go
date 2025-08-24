@@ -19,12 +19,20 @@ import (
 type TodoStore struct {
 	mu    sync.RWMutex
 	todos map[string]*todopb.Todo
+	todoIndex int
 }
 
 func NewTodoStore() *TodoStore {
 	return &TodoStore{
 		todos: make(map[string]*todopb.Todo),
+		todoIndex: 0,
 	}
+}
+
+func (ts *TodoStore) Get(id string) *todopb.Todo {
+	ts.mu.RLock()
+	defer ts.mu.RUnlock()
+	return ts.todos[id]
 }
 
 func (ts *TodoStore) Add(todo *todopb.Todo) {
@@ -49,6 +57,12 @@ func (ts *TodoStore) Update(todo *todopb.Todo) {
 	ts.todos[todo.Id] = todo
 }
 
+func (ts *TodoStore) Delete(id string) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	delete(ts.todos, id)
+}
+
 type todoServiceServer struct {
 	todopb.UnimplementedTodoServiceServer
 	store *TodoStore
@@ -56,11 +70,12 @@ type todoServiceServer struct {
 
 func (s *todoServiceServer) CreateTodo(ctx context.Context, req *todopb.CreateTodoRequest) (*todopb.Todo, error) {
 	todo := &todopb.Todo{
-		Id:        fmt.Sprintf("%d", len(s.store.todos)+1),
+		Id:        fmt.Sprintf("%d", s.store.todoIndex),
 		Title:     req.Title,
 		Completed: false,
 	}
 	s.store.Add(todo)
+	s.store.todoIndex++
 	return todo, nil
 }
 
@@ -70,9 +85,9 @@ func (s *todoServiceServer) GetTodos(ctx context.Context, req *emptypb.Empty) (*
 }
 
 func (s *todoServiceServer) UpdateTodo(ctx context.Context, req *todopb.UpdateTodoRequest) (*todopb.Todo, error) {
-	var newTodoTitle string
-	var newTodoCompleted bool
-	
+	newTodoTitle := s.store.Get(req.Id).Title
+	newTodoCompleted := s.store.Get(req.Id).Completed
+
 	if req.Title != nil {
 		newTodoTitle = *req.Title
 	}
@@ -85,8 +100,14 @@ func (s *todoServiceServer) UpdateTodo(ctx context.Context, req *todopb.UpdateTo
 		Title:     newTodoTitle,
 		Completed: newTodoCompleted,
 	}
+
 	s.store.Update(todo)
 	return todo, nil
+}
+
+func (s *todoServiceServer) DeleteTodo(ctx context.Context, req *todopb.DeleteTodoRequest) (*emptypb.Empty, error) {
+	s.store.Delete(req.Id)
+	return &emptypb.Empty{}, nil
 }
 
 func main() {
