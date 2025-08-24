@@ -1,27 +1,66 @@
 package main
 
 import (
-	// (一部抜粋)
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"os"
 	"os/signal"
+	"sync"
 
 	todopb "todo-grpc/gen/todo"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
+	"google.golang.org/protobuf/types/known/emptypb"
 )
+
+type TodoStore struct {
+	mu    sync.RWMutex
+	todos map[string]*todopb.Todo
+}
+
+func NewTodoStore() *TodoStore {
+	return &TodoStore{
+		todos: make(map[string]*todopb.Todo),
+	}
+}
+
+func (ts *TodoStore) Add(todo *todopb.Todo) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	ts.todos[todo.Id] = todo
+}
+
+func (ts *TodoStore) GetAll() []*todopb.Todo {
+	ts.mu.RLock()
+	defer ts.mu.RUnlock()
+	todos := make([]*todopb.Todo, 0, len(ts.todos))
+	for _, todo := range ts.todos {
+		todos = append(todos, todo)
+	}
+	return todos
+}
 
 type todoServiceServer struct {
 	todopb.UnimplementedTodoServiceServer
+	store *TodoStore
 }
 
-type Todo struct {
-	ID        string
-	Title     string
-	Completed bool
+func (s *todoServiceServer) CreateTodo(ctx context.Context, req *todopb.CreateTodoRequest) (*todopb.Todo, error) {
+	todo := &todopb.Todo{
+		Id:        fmt.Sprintf("%d", len(s.store.todos)+1),
+		Title:     req.Title,
+		Completed: false,
+	}
+	s.store.Add(todo)
+	return todo, nil
+}
+
+func (s *todoServiceServer) GetTodos(ctx context.Context, req *emptypb.Empty) (*todopb.GetTodosResponse, error) {
+	todos := s.store.GetAll()
+	return &todopb.GetTodosResponse{Todos: todos}, nil
 }
 
 func main() {
@@ -35,7 +74,13 @@ func main() {
 	// 2. gRPCサーバーを作成
 	s := grpc.NewServer()
 
-	todopb.RegisterTodoServiceServer(s, &todoServiceServer{})
+	store := NewTodoStore()
+
+	server := &todoServiceServer{
+		store: store,
+	}
+
+	todopb.RegisterTodoServiceServer(s, server)
 
 	reflection.Register(s)
 
