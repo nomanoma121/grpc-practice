@@ -43,6 +43,12 @@ func (ts *TodoStore) GetAll() []*todopb.Todo {
 	return todos
 }
 
+func (ts *TodoStore) Update(todo *todopb.Todo) {
+	ts.mu.Lock()
+	defer ts.mu.Unlock()
+	ts.todos[todo.Id] = todo
+}
+
 type todoServiceServer struct {
 	todopb.UnimplementedTodoServiceServer
 	store *TodoStore
@@ -61,6 +67,26 @@ func (s *todoServiceServer) CreateTodo(ctx context.Context, req *todopb.CreateTo
 func (s *todoServiceServer) GetTodos(ctx context.Context, req *emptypb.Empty) (*todopb.GetTodosResponse, error) {
 	todos := s.store.GetAll()
 	return &todopb.GetTodosResponse{Todos: todos}, nil
+}
+
+func (s *todoServiceServer) UpdateTodo(ctx context.Context, req *todopb.UpdateTodoRequest) (*todopb.Todo, error) {
+	var newTodoTitle string
+	var newTodoCompleted bool
+	
+	if req.Title != nil {
+		newTodoTitle = *req.Title
+	}
+	if req.Completed != nil {
+		newTodoCompleted = *req.Completed
+	}
+
+	todo := &todopb.Todo{
+		Id:        req.Id,
+		Title:     newTodoTitle,
+		Completed: newTodoCompleted,
+	}
+	s.store.Update(todo)
+	return todo, nil
 }
 
 func main() {
