@@ -50,7 +50,6 @@ func main() {
 		case 1:
 			handler.Get(context.Background())
 		case 2:
-			// Titleを入力させる
 			fmt.Print("Enter todo title: ")
 			var title string
 			_, err := fmt.Scanf("%s", &title)
@@ -60,9 +59,65 @@ func main() {
 			}
 			handler.Create(context.Background(), title)
 		case 3:
-			fmt.Println("Update todo - Not implemented yet")
+			fmt.Print("Enter todo ID to update: ")
+			var id string
+			_, err := fmt.Scanf("%s", &id)
+			if err != nil {
+				fmt.Println("Invalid input. Please enter a valid ID.")
+				continue
+			}
+			// どの項目を変更したいですか？
+			// 1: title, 2: completed, 3: both, 4: back
+			fmt.Println("What do you want to update?")
+			fmt.Println("1: title")
+			fmt.Println("2: completed")
+			fmt.Print("Enter your choice: ")
+			var updateChoice int
+			_, err = fmt.Scanf("%d", &updateChoice)
+			if err != nil {
+				fmt.Println("Invalid input. Please enter a number.")
+				continue
+			}
+			switch updateChoice {
+			case 1:
+				fmt.Print("Enter new title: ")
+				var title string
+				_, err = fmt.Scanf("%s", &title)
+				if err != nil {
+					fmt.Println("Invalid input. Please enter a title.")
+					continue
+				}
+				handler.Update(context.Background(), id, &title, nil)
+			case 2:
+				fmt.Print("Is it completed? (y/n): ")
+				var completed string
+				_, err = fmt.Scanf("%s", &completed)
+				if err != nil {
+					fmt.Println("Invalid input. Please enter (y/n).")
+					continue
+				}
+				var isCompleted bool
+				if completed == "y" {
+					isCompleted = true
+				} else if completed == "n" {
+					isCompleted = false
+				} else {
+					fmt.Println("Invalid input. Please enter (y/n).")
+					continue
+				}
+				handler.Update(context.Background(), id, nil, &isCompleted)
+			default: 
+				fmt.Println("Invalid choice. Please try again.")
+			}
 		case 4:
-			fmt.Println("Delete todo - Not implemented yet")
+			fmt.Print("Enter todo ID to delete: ")
+			var id string
+			_, err := fmt.Scanf("%s", &id)
+			if err != nil {
+				fmt.Println("Invalid input. Please enter a valid ID.")
+				continue
+			}
+			handler.Delete(context.Background(), id)
 		case 0:
 			fmt.Println("Goodbye!")
 			return
@@ -90,9 +145,11 @@ func (h *TodoHandler) Get(ctx context.Context) {
 	}
 	
 	fmt.Printf("Retrieved %d todos:\n", len(r.Todos))
+	fmt.Println("---------------------------------------")
 	for _, todo := range r.Todos {
 		fmt.Printf("- ID: %s, Title: %s, Completed: %v\n", todo.Id, todo.Title, todo.Completed)
 	}
+	fmt.Println("---------------------------------------")
 }
 
 func (h *TodoHandler) Create(ctx context.Context, title string) {
@@ -102,4 +159,26 @@ func (h *TodoHandler) Create(ctx context.Context, title string) {
 		return
 	}
 	fmt.Printf("Created todo: ID: %s, Title: %s, Completed: %v\n", r.Id, r.Title, r.Completed)
+}
+
+func (h *TodoHandler) Update(ctx context.Context, id string, title *string, completed *bool) {
+	r, err := h.client.UpdateTodo(ctx, &todopb.UpdateTodoRequest{
+		Id:        id,
+		Title:     title,
+		Completed: completed,
+	})
+	if err != nil {
+		log.Printf("could not update todo: %v", err)
+		return
+	}
+	fmt.Printf("Updated todo: ID: %s, Title: %s, Completed: %v\n", r.Id, r.Title, r.Completed)
+}
+
+func (h *TodoHandler) Delete(ctx context.Context, id string) {
+	_, err := h.client.DeleteTodo(ctx, &todopb.DeleteTodoRequest{Id: id})
+	if err != nil {
+		log.Printf("could not delete todo: %v", err)
+		return
+	}
+	fmt.Printf("Deleted todo: ID: %s\n", id)
 }
