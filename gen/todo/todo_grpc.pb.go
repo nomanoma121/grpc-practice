@@ -24,6 +24,7 @@ const (
 	TodoService_GetTodos_FullMethodName   = "/todo.TodoService/GetTodos"
 	TodoService_UpdateTodo_FullMethodName = "/todo.TodoService/UpdateTodo"
 	TodoService_DeleteTodo_FullMethodName = "/todo.TodoService/DeleteTodo"
+	TodoService_WatchTodos_FullMethodName = "/todo.TodoService/WatchTodos"
 )
 
 // TodoServiceClient is the client API for TodoService service.
@@ -34,6 +35,7 @@ type TodoServiceClient interface {
 	GetTodos(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*GetTodosResponse, error)
 	UpdateTodo(ctx context.Context, in *UpdateTodoRequest, opts ...grpc.CallOption) (*Todo, error)
 	DeleteTodo(ctx context.Context, in *DeleteTodoRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	WatchTodos(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Todo], error)
 }
 
 type todoServiceClient struct {
@@ -84,6 +86,25 @@ func (c *todoServiceClient) DeleteTodo(ctx context.Context, in *DeleteTodoReques
 	return out, nil
 }
 
+func (c *todoServiceClient) WatchTodos(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[Todo], error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	stream, err := c.cc.NewStream(ctx, &TodoService_ServiceDesc.Streams[0], TodoService_WatchTodos_FullMethodName, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &grpc.GenericClientStream[emptypb.Empty, Todo]{ClientStream: stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TodoService_WatchTodosClient = grpc.ServerStreamingClient[Todo]
+
 // TodoServiceServer is the server API for TodoService service.
 // All implementations must embed UnimplementedTodoServiceServer
 // for forward compatibility.
@@ -92,6 +113,7 @@ type TodoServiceServer interface {
 	GetTodos(context.Context, *emptypb.Empty) (*GetTodosResponse, error)
 	UpdateTodo(context.Context, *UpdateTodoRequest) (*Todo, error)
 	DeleteTodo(context.Context, *DeleteTodoRequest) (*emptypb.Empty, error)
+	WatchTodos(*emptypb.Empty, grpc.ServerStreamingServer[Todo]) error
 	mustEmbedUnimplementedTodoServiceServer()
 }
 
@@ -113,6 +135,9 @@ func (UnimplementedTodoServiceServer) UpdateTodo(context.Context, *UpdateTodoReq
 }
 func (UnimplementedTodoServiceServer) DeleteTodo(context.Context, *DeleteTodoRequest) (*emptypb.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTodo not implemented")
+}
+func (UnimplementedTodoServiceServer) WatchTodos(*emptypb.Empty, grpc.ServerStreamingServer[Todo]) error {
+	return status.Errorf(codes.Unimplemented, "method WatchTodos not implemented")
 }
 func (UnimplementedTodoServiceServer) mustEmbedUnimplementedTodoServiceServer() {}
 func (UnimplementedTodoServiceServer) testEmbeddedByValue()                     {}
@@ -207,6 +232,17 @@ func _TodoService_DeleteTodo_Handler(srv interface{}, ctx context.Context, dec f
 	return interceptor(ctx, in, info, handler)
 }
 
+func _TodoService_WatchTodos_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(emptypb.Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(TodoServiceServer).WatchTodos(m, &grpc.GenericServerStream[emptypb.Empty, Todo]{ServerStream: stream})
+}
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type TodoService_WatchTodosServer = grpc.ServerStreamingServer[Todo]
+
 // TodoService_ServiceDesc is the grpc.ServiceDesc for TodoService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -231,6 +267,12 @@ var TodoService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _TodoService_DeleteTodo_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "WatchTodos",
+			Handler:       _TodoService_WatchTodos_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "todo.proto",
 }

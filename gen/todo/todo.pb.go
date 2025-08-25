@@ -297,7 +297,7 @@ const file_todo_proto_rawDesc = "" +
 	"\x05todos\x18\x01 \x03(\v2\n" +
 	".todo.TodoR\x05todos\"#\n" +
 	"\x11DeleteTodoRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id2\xee\x01\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id2\xa2\x02\n" +
 	"\vTodoService\x121\n" +
 	"\n" +
 	"CreateTodo\x12\x17.todo.CreateTodoRequest\x1a\n" +
@@ -307,7 +307,10 @@ const file_todo_proto_rawDesc = "" +
 	"UpdateTodo\x12\x17.todo.UpdateTodoRequest\x1a\n" +
 	".todo.Todo\x12=\n" +
 	"\n" +
-	"DeleteTodo\x12\x17.todo.DeleteTodoRequest\x1a\x16.google.protobuf.EmptyBk\n" +
+	"DeleteTodo\x12\x17.todo.DeleteTodoRequest\x1a\x16.google.protobuf.Empty\x122\n" +
+	"\n" +
+	"WatchTodos\x12\x16.google.protobuf.Empty\x1a\n" +
+	".todo.Todo0\x01Bk\n" +
 	"\bcom.todoB\tTodoProtoP\x01Z$github.com/bufbuild/buf-examples/gen\xa2\x02\x03TXX\xaa\x02\x04Todo\xca\x02\x04Todo\xe2\x02\x10Todo\\GPBMetadata\xea\x02\x04Todob\x06proto3"
 
 var (
@@ -337,12 +340,14 @@ var file_todo_proto_depIdxs = []int32{
 	5, // 2: todo.TodoService.GetTodos:input_type -> google.protobuf.Empty
 	2, // 3: todo.TodoService.UpdateTodo:input_type -> todo.UpdateTodoRequest
 	4, // 4: todo.TodoService.DeleteTodo:input_type -> todo.DeleteTodoRequest
-	0, // 5: todo.TodoService.CreateTodo:output_type -> todo.Todo
-	3, // 6: todo.TodoService.GetTodos:output_type -> todo.GetTodosResponse
-	0, // 7: todo.TodoService.UpdateTodo:output_type -> todo.Todo
-	5, // 8: todo.TodoService.DeleteTodo:output_type -> google.protobuf.Empty
-	5, // [5:9] is the sub-list for method output_type
-	1, // [1:5] is the sub-list for method input_type
+	5, // 5: todo.TodoService.WatchTodos:input_type -> google.protobuf.Empty
+	0, // 6: todo.TodoService.CreateTodo:output_type -> todo.Todo
+	3, // 7: todo.TodoService.GetTodos:output_type -> todo.GetTodosResponse
+	0, // 8: todo.TodoService.UpdateTodo:output_type -> todo.Todo
+	5, // 9: todo.TodoService.DeleteTodo:output_type -> google.protobuf.Empty
+	0, // 10: todo.TodoService.WatchTodos:output_type -> todo.Todo
+	6, // [6:11] is the sub-list for method output_type
+	1, // [1:6] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name
