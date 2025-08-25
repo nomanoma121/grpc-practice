@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"time"
 
 	todopb "todo-grpc/gen/todo"
 
@@ -29,10 +28,8 @@ func main() {
 	defer conn.Close()
 	c := todopb.NewTodoServiceClient(conn)
 
-	// Contact the server and print out its response.
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	defer cancel()
-	
+	handler := NewTodoHandler(c)
+
 	for {
 		fmt.Println("\nWhat do you want to do?")
 		fmt.Println("1: Get todos")
@@ -51,9 +48,17 @@ func main() {
 		
 		switch choice {
 		case 1:
-			getTodos(ctx, c)
+			handler.Get(context.Background())
 		case 2:
-			fmt.Println("Create todo - Not implemented yet")
+			// Titleを入力させる
+			fmt.Print("Enter todo title: ")
+			var title string
+			_, err := fmt.Scanf("%s", &title)
+			if err != nil {
+				fmt.Println("Invalid input. Please enter a title.")
+				continue
+			}
+			handler.Create(context.Background(), title)
 		case 3:
 			fmt.Println("Update todo - Not implemented yet")
 		case 4:
@@ -67,14 +72,34 @@ func main() {
 	}
 }
 
-func getTodos(ctx context.Context, c todopb.TodoServiceClient) {
-	r, err := c.GetTodos(ctx, &emptypb.Empty{})
+type TodoHandler struct {
+	client todopb.TodoServiceClient
+}
+
+func NewTodoHandler(client todopb.TodoServiceClient) *TodoHandler {
+	return &TodoHandler{
+		client: client,
+	}
+}
+
+func (h *TodoHandler) Get(ctx context.Context) {
+	r, err := h.client.GetTodos(ctx, &emptypb.Empty{})
 	if err != nil {
-		log.Fatalf("could not get todos: %v", err)
+		log.Printf("could not get todos: %v", err)
+		return
 	}
 	
 	fmt.Printf("Retrieved %d todos:\n", len(r.Todos))
 	for _, todo := range r.Todos {
 		fmt.Printf("- ID: %s, Title: %s, Completed: %v\n", todo.Id, todo.Title, todo.Completed)
 	}
+}
+
+func (h *TodoHandler) Create(ctx context.Context, title string) {
+	r, err := h.client.CreateTodo(ctx, &todopb.CreateTodoRequest{Title: title})
+	if err != nil {
+		log.Printf("could not create todo: %v", err)
+		return
+	}
+	fmt.Printf("Created todo: ID: %s, Title: %s, Completed: %v\n", r.Id, r.Title, r.Completed)
 }
