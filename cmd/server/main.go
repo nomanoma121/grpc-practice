@@ -155,24 +155,54 @@ func (s *todoServiceServer) DeleteTodo(ctx context.Context, req *todopb.DeleteTo
 	return &emptypb.Empty{}, nil
 }
 
-func (s *todoServiceServer) WatchTodos(req *emptypb.Empty, stream todopb.TodoService_WatchTodosServer) error {
+func (s *todoServiceServer) WatchTodos(stream grpc.BidiStreamingServer[todopb.WatchTodosRequest, todopb.Todo]) error {
 	log.Println("WatchTodos stream started for a new client")
 
-	id, ch := s.broker.Subscribe()
-	defer func() {
-		s.broker.Unsubscribe(id)
-	}()
+	var id string
+	var ch chan *todopb.Todo
+	var watching bool
 
-	ctx := stream.Context()
+	reqCh := make(chan *todopb.WatchTodosRequest)
+
+	go func() {
+		for {
+			req, err := stream.Recv()
+			if err != nil {
+				close(reqCh)
+				return
+			}
+			reqCh <- req
+		}
+	}()
 
 	for {
 		select {
+		case req, ok := <-reqCh:
+			if !ok {
+				return nil
+			}
+			switch req.GetAction().(type) {
+			case *todopb.WatchTodosRequest_Start:
+				log.Println("Start watching todos")
+				id, ch = s.broker.Subscribe()
+				watching = true
+			case *todopb.WatchTodosRequest_Stop:
+				s.broker.Unsubscribe(id)
+				watching = false
+				log.Println("Stopped watching todos")
+				return nil
+			}
 		case todo := <-ch:
+			if !watching{
+				return nil
+			}
 			if err := stream.Send(todo); err != nil {
 				return err
 			}
-
-		case <-ctx.Done():
+		case <-stream.Context().Done():
+			if watching {
+				s.broker.Unsubscribe(id)
+			}
 			return nil
 		}
 	}
