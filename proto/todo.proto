@@ -11,7 +11,7 @@ service TodoService {
   rpc GetTodos(google.protobuf.Empty) returns (GetTodosResponse);
   rpc UpdateTodo(UpdateTodoRequest) returns (Todo);
   rpc DeleteTodo(DeleteTodoRequest) returns (google.protobuf.Empty);
-  rpc WatchTodos(google.protobuf.Empty) returns (stream Todo);
+  rpc WatchTodos(stream WatchTodosRequest) returns (stream Todo);
 }
 
 message Todo {
@@ -36,4 +36,15 @@ message GetTodosResponse {
 
 message DeleteTodoRequest {
   string id = 1;
+}
+
+message StartWatchRequest {}
+
+message StopWatchRequest {}
+
+message WatchTodosRequest {
+  oneof action {
+    StartWatchRequest start = 1;
+    StopWatchRequest stop = 2;
+  }
 }
