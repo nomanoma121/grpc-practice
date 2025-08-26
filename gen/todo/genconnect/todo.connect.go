@@ -52,7 +52,7 @@ type TodoServiceClient interface {
 	GetTodos(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[gen.GetTodosResponse], error)
 	UpdateTodo(context.Context, *connect.Request[gen.UpdateTodoRequest]) (*connect.Response[gen.Todo], error)
 	DeleteTodo(context.Context, *connect.Request[gen.DeleteTodoRequest]) (*connect.Response[emptypb.Empty], error)
-	WatchTodos(context.Context, *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[gen.Todo], error)
+	WatchTodos(context.Context) *connect.BidiStreamForClient[gen.WatchTodosRequest, gen.Todo]
 }
 
 // NewTodoServiceClient constructs a client for the todo.TodoService service. By default, it uses
@@ -90,7 +90,7 @@ func NewTodoServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(todoServiceMethods.ByName("DeleteTodo")),
 			connect.WithClientOptions(opts...),
 		),
-		watchTodos: connect.NewClient[emptypb.Empty, gen.Todo](
+		watchTodos: connect.NewClient[gen.WatchTodosRequest, gen.Todo](
 			httpClient,
 			baseURL+TodoServiceWatchTodosProcedure,
 			connect.WithSchema(todoServiceMethods.ByName("WatchTodos")),
@@ -105,7 +105,7 @@ type todoServiceClient struct {
 	getTodos   *connect.Client[emptypb.Empty, gen.GetTodosResponse]
 	updateTodo *connect.Client[gen.UpdateTodoRequest, gen.Todo]
 	deleteTodo *connect.Client[gen.DeleteTodoRequest, emptypb.Empty]
-	watchTodos *connect.Client[emptypb.Empty, gen.Todo]
+	watchTodos *connect.Client[gen.WatchTodosRequest, gen.Todo]
 }
 
 // CreateTodo calls todo.TodoService.CreateTodo.
@@ -129,8 +129,8 @@ func (c *todoServiceClient) DeleteTodo(ctx context.Context, req *connect.Request
 }
 
 // WatchTodos calls todo.TodoService.WatchTodos.
-func (c *todoServiceClient) WatchTodos(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.ServerStreamForClient[gen.Todo], error) {
-	return c.watchTodos.CallServerStream(ctx, req)
+func (c *todoServiceClient) WatchTodos(ctx context.Context) *connect.BidiStreamForClient[gen.WatchTodosRequest, gen.Todo] {
+	return c.watchTodos.CallBidiStream(ctx)
 }
 
 // TodoServiceHandler is an implementation of the todo.TodoService service.
@@ -139,7 +139,7 @@ type TodoServiceHandler interface {
 	GetTodos(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[gen.GetTodosResponse], error)
 	UpdateTodo(context.Context, *connect.Request[gen.UpdateTodoRequest]) (*connect.Response[gen.Todo], error)
 	DeleteTodo(context.Context, *connect.Request[gen.DeleteTodoRequest]) (*connect.Response[emptypb.Empty], error)
-	WatchTodos(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[gen.Todo]) error
+	WatchTodos(context.Context, *connect.BidiStream[gen.WatchTodosRequest, gen.Todo]) error
 }
 
 // NewTodoServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -173,7 +173,7 @@ func NewTodoServiceHandler(svc TodoServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(todoServiceMethods.ByName("DeleteTodo")),
 		connect.WithHandlerOptions(opts...),
 	)
-	todoServiceWatchTodosHandler := connect.NewServerStreamHandler(
+	todoServiceWatchTodosHandler := connect.NewBidiStreamHandler(
 		TodoServiceWatchTodosProcedure,
 		svc.WatchTodos,
 		connect.WithSchema(todoServiceMethods.ByName("WatchTodos")),
@@ -216,6 +216,6 @@ func (UnimplementedTodoServiceHandler) DeleteTodo(context.Context, *connect.Requ
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("todo.TodoService.DeleteTodo is not implemented"))
 }
 
-func (UnimplementedTodoServiceHandler) WatchTodos(context.Context, *connect.Request[emptypb.Empty], *connect.ServerStream[gen.Todo]) error {
+func (UnimplementedTodoServiceHandler) WatchTodos(context.Context, *connect.BidiStream[gen.WatchTodosRequest, gen.Todo]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("todo.TodoService.WatchTodos is not implemented"))
 }

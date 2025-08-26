@@ -274,6 +274,160 @@ func (x *DeleteTodoRequest) GetId() string {
 	return ""
 }
 
+type StartWatchRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StartWatchRequest) Reset() {
+	*x = StartWatchRequest{}
+	mi := &file_todo_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StartWatchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StartWatchRequest) ProtoMessage() {}
+
+func (x *StartWatchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_todo_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StartWatchRequest.ProtoReflect.Descriptor instead.
+func (*StartWatchRequest) Descriptor() ([]byte, []int) {
+	return file_todo_proto_rawDescGZIP(), []int{5}
+}
+
+type StopWatchRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *StopWatchRequest) Reset() {
+	*x = StopWatchRequest{}
+	mi := &file_todo_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *StopWatchRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*StopWatchRequest) ProtoMessage() {}
+
+func (x *StopWatchRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_todo_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use StopWatchRequest.ProtoReflect.Descriptor instead.
+func (*StopWatchRequest) Descriptor() ([]byte, []int) {
+	return file_todo_proto_rawDescGZIP(), []int{6}
+}
+
+type WatchTodosRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Types that are valid to be assigned to Action:
+	//
+	//	*WatchTodosRequest_Start
+	//	*WatchTodosRequest_Stop
+	Action        isWatchTodosRequest_Action `protobuf_oneof:"action"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *WatchTodosRequest) Reset() {
+	*x = WatchTodosRequest{}
+	mi := &file_todo_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WatchTodosRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WatchTodosRequest) ProtoMessage() {}
+
+func (x *WatchTodosRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_todo_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WatchTodosRequest.ProtoReflect.Descriptor instead.
+func (*WatchTodosRequest) Descriptor() ([]byte, []int) {
+	return file_todo_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *WatchTodosRequest) GetAction() isWatchTodosRequest_Action {
+	if x != nil {
+		return x.Action
+	}
+	return nil
+}
+
+func (x *WatchTodosRequest) GetStart() *StartWatchRequest {
+	if x != nil {
+		if x, ok := x.Action.(*WatchTodosRequest_Start); ok {
+			return x.Start
+		}
+	}
+	return nil
+}
+
+func (x *WatchTodosRequest) GetStop() *StopWatchRequest {
+	if x != nil {
+		if x, ok := x.Action.(*WatchTodosRequest_Stop); ok {
+			return x.Stop
+		}
+	}
+	return nil
+}
+
+type isWatchTodosRequest_Action interface {
+	isWatchTodosRequest_Action()
+}
+
+type WatchTodosRequest_Start struct {
+	Start *StartWatchRequest `protobuf:"bytes,1,opt,name=start,proto3,oneof"`
+}
+
+type WatchTodosRequest_Stop struct {
+	Stop *StopWatchRequest `protobuf:"bytes,2,opt,name=stop,proto3,oneof"`
+}
+
+func (*WatchTodosRequest_Start) isWatchTodosRequest_Action() {}
+
+func (*WatchTodosRequest_Stop) isWatchTodosRequest_Action() {}
+
 var File_todo_proto protoreflect.FileDescriptor
 
 const file_todo_proto_rawDesc = "" +
@@ -297,7 +451,13 @@ const file_todo_proto_rawDesc = "" +
 	"\x05todos\x18\x01 \x03(\v2\n" +
 	".todo.TodoR\x05todos\"#\n" +
 	"\x11DeleteTodoRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id2\xa2\x02\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x13\n" +
+	"\x11StartWatchRequest\"\x12\n" +
+	"\x10StopWatchRequest\"|\n" +
+	"\x11WatchTodosRequest\x12/\n" +
+	"\x05start\x18\x01 \x01(\v2\x17.todo.StartWatchRequestH\x00R\x05start\x12,\n" +
+	"\x04stop\x18\x02 \x01(\v2\x16.todo.StopWatchRequestH\x00R\x04stopB\b\n" +
+	"\x06action2\xa5\x02\n" +
 	"\vTodoService\x121\n" +
 	"\n" +
 	"CreateTodo\x12\x17.todo.CreateTodoRequest\x1a\n" +
@@ -307,10 +467,10 @@ const file_todo_proto_rawDesc = "" +
 	"UpdateTodo\x12\x17.todo.UpdateTodoRequest\x1a\n" +
 	".todo.Todo\x12=\n" +
 	"\n" +
-	"DeleteTodo\x12\x17.todo.DeleteTodoRequest\x1a\x16.google.protobuf.Empty\x122\n" +
+	"DeleteTodo\x12\x17.todo.DeleteTodoRequest\x1a\x16.google.protobuf.Empty\x125\n" +
 	"\n" +
-	"WatchTodos\x12\x16.google.protobuf.Empty\x1a\n" +
-	".todo.Todo0\x01Bk\n" +
+	"WatchTodos\x12\x17.todo.WatchTodosRequest\x1a\n" +
+	".todo.Todo(\x010\x01Bk\n" +
 	"\bcom.todoB\tTodoProtoP\x01Z$github.com/bufbuild/buf-examples/gen\xa2\x02\x03TXX\xaa\x02\x04Todo\xca\x02\x04Todo\xe2\x02\x10Todo\\GPBMetadata\xea\x02\x04Todob\x06proto3"
 
 var (
@@ -325,32 +485,37 @@ func file_todo_proto_rawDescGZIP() []byte {
 	return file_todo_proto_rawDescData
 }
 
-var file_todo_proto_msgTypes = make([]protoimpl.MessageInfo, 5)
+var file_todo_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_todo_proto_goTypes = []any{
 	(*Todo)(nil),              // 0: todo.Todo
 	(*CreateTodoRequest)(nil), // 1: todo.CreateTodoRequest
 	(*UpdateTodoRequest)(nil), // 2: todo.UpdateTodoRequest
 	(*GetTodosResponse)(nil),  // 3: todo.GetTodosResponse
 	(*DeleteTodoRequest)(nil), // 4: todo.DeleteTodoRequest
-	(*emptypb.Empty)(nil),     // 5: google.protobuf.Empty
+	(*StartWatchRequest)(nil), // 5: todo.StartWatchRequest
+	(*StopWatchRequest)(nil),  // 6: todo.StopWatchRequest
+	(*WatchTodosRequest)(nil), // 7: todo.WatchTodosRequest
+	(*emptypb.Empty)(nil),     // 8: google.protobuf.Empty
 }
 var file_todo_proto_depIdxs = []int32{
 	0, // 0: todo.GetTodosResponse.todos:type_name -> todo.Todo
-	1, // 1: todo.TodoService.CreateTodo:input_type -> todo.CreateTodoRequest
-	5, // 2: todo.TodoService.GetTodos:input_type -> google.protobuf.Empty
-	2, // 3: todo.TodoService.UpdateTodo:input_type -> todo.UpdateTodoRequest
-	4, // 4: todo.TodoService.DeleteTodo:input_type -> todo.DeleteTodoRequest
-	5, // 5: todo.TodoService.WatchTodos:input_type -> google.protobuf.Empty
-	0, // 6: todo.TodoService.CreateTodo:output_type -> todo.Todo
-	3, // 7: todo.TodoService.GetTodos:output_type -> todo.GetTodosResponse
-	0, // 8: todo.TodoService.UpdateTodo:output_type -> todo.Todo
-	5, // 9: todo.TodoService.DeleteTodo:output_type -> google.protobuf.Empty
-	0, // 10: todo.TodoService.WatchTodos:output_type -> todo.Todo
-	6, // [6:11] is the sub-list for method output_type
-	1, // [1:6] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	5, // 1: todo.WatchTodosRequest.start:type_name -> todo.StartWatchRequest
+	6, // 2: todo.WatchTodosRequest.stop:type_name -> todo.StopWatchRequest
+	1, // 3: todo.TodoService.CreateTodo:input_type -> todo.CreateTodoRequest
+	8, // 4: todo.TodoService.GetTodos:input_type -> google.protobuf.Empty
+	2, // 5: todo.TodoService.UpdateTodo:input_type -> todo.UpdateTodoRequest
+	4, // 6: todo.TodoService.DeleteTodo:input_type -> todo.DeleteTodoRequest
+	7, // 7: todo.TodoService.WatchTodos:input_type -> todo.WatchTodosRequest
+	0, // 8: todo.TodoService.CreateTodo:output_type -> todo.Todo
+	3, // 9: todo.TodoService.GetTodos:output_type -> todo.GetTodosResponse
+	0, // 10: todo.TodoService.UpdateTodo:output_type -> todo.Todo
+	8, // 11: todo.TodoService.DeleteTodo:output_type -> google.protobuf.Empty
+	0, // 12: todo.TodoService.WatchTodos:output_type -> todo.Todo
+	8, // [8:13] is the sub-list for method output_type
+	3, // [3:8] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_todo_proto_init() }
@@ -359,13 +524,17 @@ func file_todo_proto_init() {
 		return
 	}
 	file_todo_proto_msgTypes[2].OneofWrappers = []any{}
+	file_todo_proto_msgTypes[7].OneofWrappers = []any{
+		(*WatchTodosRequest_Start)(nil),
+		(*WatchTodosRequest_Stop)(nil),
+	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_todo_proto_rawDesc), len(file_todo_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   5,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
