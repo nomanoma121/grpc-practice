@@ -189,12 +189,33 @@ func (h *TodoHandler) Delete(ctx context.Context, id string) {
 }
 
 func (h *TodoHandler) Watch(ctx context.Context) {
-	stream, err := h.client.WatchTodos(ctx, &emptypb.Empty{})
+	stream, err := h.client.WatchTodos(ctx)
 	if err != nil {
 		log.Printf("could not watch todos: %v", err)
 		return
 	}
 	defer stream.CloseSend()
+
+	err = stream.Send(&todopb.WatchTodosRequest{
+		Action: &todopb.WatchTodosRequest_Start{
+			Start: &todopb.StartWatchRequest{},
+		},
+	})
+
+	if err != nil {
+		log.Printf("could not send watch request: %v", err)
+		return
+	}
+
+	go func() {
+		fmt.Println("Press Enter to stop watching...")
+		fmt.Scanln()
+		stream.Send(&todopb.WatchTodosRequest{
+			Action: &todopb.WatchTodosRequest_Stop{
+				Stop: &todopb.StopWatchRequest{},
+			},
+		})
+	}()
 
 	for {
 		todo, err := stream.Recv()
