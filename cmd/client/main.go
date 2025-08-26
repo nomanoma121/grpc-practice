@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 
 	todopb "todo-grpc/gen/todo"
@@ -19,7 +20,7 @@ var (
 
 func main() {
 	flag.Parse()
-	
+
 	// Set up a connection to the server.
 	conn, err := grpc.NewClient(*addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
@@ -36,16 +37,17 @@ func main() {
 		fmt.Println("2: Create todo")
 		fmt.Println("3: Update todo")
 		fmt.Println("4: Delete todo")
+		fmt.Println("5: Watch todos (realtime)")
 		fmt.Println("0: Exit")
 		fmt.Print("Enter your choice: ")
-		
+
 		var choice int
 		_, err := fmt.Scanf("%d", &choice)
 		if err != nil {
 			fmt.Println("Invalid input. Please enter a number.")
 			continue
 		}
-		
+
 		switch choice {
 		case 1:
 			handler.Get(context.Background())
@@ -106,7 +108,7 @@ func main() {
 					continue
 				}
 				handler.Update(context.Background(), id, nil, &isCompleted)
-			default: 
+			default:
 				fmt.Println("Invalid choice. Please try again.")
 			}
 		case 4:
@@ -118,6 +120,9 @@ func main() {
 				continue
 			}
 			handler.Delete(context.Background(), id)
+		case 5:
+			fmt.Println("Watching todos ...")
+			handler.Watch(context.Background())
 		case 0:
 			fmt.Println("Goodbye!")
 			return
@@ -143,7 +148,7 @@ func (h *TodoHandler) Get(ctx context.Context) {
 		log.Printf("could not get todos: %v", err)
 		return
 	}
-	
+
 	fmt.Printf("Retrieved %d todos:\n", len(r.Todos))
 	fmt.Println("---------------------------------------")
 	for _, todo := range r.Todos {
@@ -181,4 +186,25 @@ func (h *TodoHandler) Delete(ctx context.Context, id string) {
 		return
 	}
 	fmt.Printf("Deleted todo: ID: %s\n", id)
+}
+
+func (h *TodoHandler) Watch(ctx context.Context) {
+	stream, err := h.client.WatchTodos(ctx, &emptypb.Empty{})
+	if err != nil {
+		log.Printf("could not watch todos: %v", err)
+		return
+	}
+	defer stream.CloseSend()
+
+	for {
+		todo, err := stream.Recv()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			log.Printf("error receiving todo update: %v", err)
+			break
+		}
+		fmt.Printf("Received todo update: ID: %s, Title: %s, Completed: %v\n", todo.Id, todo.Title, todo.Completed)
+	}
 }
